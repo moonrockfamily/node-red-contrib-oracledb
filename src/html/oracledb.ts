@@ -128,7 +128,7 @@ RED.nodes.registerType("oracledb", {
                 functionDialogResize();
             }
         });
-        $("#dialog").one("dialogclose", function(ev, ui) {
+        $("#dialog").one("dialogclose", function(eventObject) {
             var height = $("#dialog").dialog("option", "height");
             $("#dialog").off("dialogresize", functionDialogResize);
         });

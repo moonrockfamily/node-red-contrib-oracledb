@@ -42,6 +42,10 @@ This is a Node-Red Oracle database input/output node. The function it provides d
 
 ## What's new     <a name="whatsnew"></a>
 
+### version 0.6.0
+- updated oracledb dependency for Node.js 14 or later; https://www.npmjs.com/package/oracledb
+- updated dev dependencies
+fs
 ### version 0.4.1
 - bugfixes
 - added some tests

@@ -31,16 +31,6 @@ var tsProject = ts.createProject({
   declaration: true
 });
 
-gulp.task('default', ['build:clean']);
-
-gulp.task('build', ['compile', 'copy-to-lib', 'test', 'copy-to-node-red']);
-gulp.task('build:clean', ['clean', 'compile', 'test']);
-
-gulp.task('watch', ['clean', 'build'], function () {
-  gulp.watch('server/**/*.ts', ['build']);
-});
-
-
 gulp.task('clean', function (cb) {
   del.sync([
     'coverage',
@@ -64,12 +54,10 @@ gulp.task('compile', function () {
     .pipe(tslint({
       configuration: 'tools/tslint/tslint-node.json'
     }))
-    .pipe(tslint.report('prose', {
-      emitError: false
-    }))
+    .pipe(tslint.report())
     .pipe(addsrc.prepend('typings*/**/*.d.ts'))
     // .pipe (sourcemaps.init())
-    .pipe (ts(tsProject));
+    .pipe (tsProject());
 
   // return merge([
   //   tsResult.js
@@ -92,7 +80,7 @@ gulp.task('lint', function () {
     .pipe(tslint.report('full'));
 });
 
-gulp.task('copy-to-lib', ['compile'], function () {
+gulp.task('copy-to-lib', gulp.series(['compile']), function () {
   return gulp.src([
     'src/html/*.html',
     'tools/concat/js_prefix.html',
@@ -104,7 +92,7 @@ gulp.task('copy-to-lib', ['compile'], function () {
   .pipe(gulp.dest('lib'));
 });
 
-gulp.task('copy-to-node-red', ['copy-to-lib'], function () {
+gulp.task('copy-to-node-red', gulp.series(['copy-to-lib']), function () {
   if (node_red_root) {
     return gulp.src(['lib/*.*'])
     .pipe(gulp.dest(node_red_root + '/node_modules/node-red-contrib-oracledb/lib'));
@@ -112,7 +100,7 @@ gulp.task('copy-to-node-red', ['copy-to-lib'], function () {
 });
 
 // unit tests, more a fast integration test because at the moment it uses an external AMQP server
-gulp.task('test', ['copy-to-lib'], function () {
+gulp.task('test', gulp.series(['copy-to-lib']), function () {
   return gulp.src('transpiled/**/*.spec.js', {
     read: false
   })
@@ -124,7 +112,7 @@ gulp.task('test', ['copy-to-lib'], function () {
 });
 
 // integration tests, at the moment more an extended version of the unit tests
-gulp.task('test:integration', ['copy-to-lib'], function () {
+gulp.task('test:integration', gulp.series(['copy-to-lib']), function () {
   return gulp.src('transpiled/**/*.spec-i.js', {
     read: false
   })
@@ -134,7 +122,7 @@ gulp.task('test:integration', ['copy-to-lib'], function () {
     .on('error', swallowError);
 });
 
-gulp.task('test:coverage', ['copy-to-lib'], function () {
+gulp.task('test:coverage', gulp.series(['copy-to-lib']), function () {
   return gulp.src('transpiled/**/*.spec.js', {
     read: false
   })
@@ -144,4 +132,11 @@ gulp.task('test:coverage', ['copy-to-lib'], function () {
     }));
 });
 
+gulp.task('build:clean', gulp.series(['clean', 'compile', 'test']));
+gulp.task('default', gulp.series(['build:clean']));
 
+gulp.task('build', gulp.series(['compile', 'copy-to-lib', 'test', 'copy-to-node-red']));
+
+gulp.task('watch', gulp.series(['clean', 'build']), function () {
+  gulp.watch('server/**/*.ts', ['build']);
+});
