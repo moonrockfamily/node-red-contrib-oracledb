@@ -2,7 +2,7 @@ Node-RED Oracle Database nodes
 ====================================
 
 
-`node-red-contrib-oracledb` is a [Node-RED](http://nodered.org/docs/creating-nodes/packaging.html) package that connects directly to an Oracle database server. It currently contains a query and a configuration node to connect to Oracle databases for Node-RED storage.
+`node-red-contrib-oracledb-2` is a [Node-RED](http://nodered.org/docs/creating-nodes/packaging.html) package that connects directly to an Oracle database server. It currently contains a query and a configuration node to connect to Oracle databases for Node-RED storage.
 
 It uses the [oracledb](https://www.npmjs.com/package/oracledb) library for the Oracle database connectivity.
 
@@ -18,16 +18,16 @@ It uses the [oracledb](https://www.npmjs.com/package/oracledb) library for the O
 ## Installation     <a name="installation"></a>
 
 If you have installed Node-RED as a global node.js package (you use the command `node-red` anywhere to start it), you need to install
-node-red-contrib-oracledb as a global package as well:
+node-red-contrib-oracledb-2 as a global package as well:
 
 ```
-$[sudo] npm install -g node-red-contrib-oracledb
+$[sudo] npm install -g node-red-contrib-oracledb-2
 ```
 
 If you have installed the .zip or cloned your own copy of Node-RED from github, you can install it as a normal npm package inside the Node-RED project directory:
 
 ```
-<path/to/node-red>$ npm install node-red-contrib-oracledb
+<path/to/node-red>$ npm install node-red-contrib-oracledb-2
 ```
 
 ## Overview     <a name="overview"></a>
