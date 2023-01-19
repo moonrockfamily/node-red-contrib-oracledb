@@ -31,24 +31,20 @@ var tsProject = ts.createProject({
   declaration: true
 });
 
-gulp.task('clean', function (cb) {
-  del.sync([
+gulp.task('clean', async function () {
+  del([
+    'lib',
     'coverage',
     'transpiled'
   ]);
-  cb();
 });
 
-gulp.task('clean:all', function () {
-  del([
-    'coverage',
-    'transpiled',
-    'node_modules'
-  ]);
-});
+gulp.task('clean:all', gulp.series(['clean', async function () {
+  del(['node_modules']);
+}]));
 
 
-gulp.task('compile', function () {
+function compile() {
   // compile typescript
   var tsResult = gulp.src('src/**/*.ts')
     .pipe(tslint({
@@ -69,18 +65,19 @@ gulp.task('compile', function () {
   //   tsResult.dts.pipe(gulp.dest('transpiled'))
   // ]);
   return tsResult.js.pipe(gulp.dest('transpiled'));
-});
+}
+gulp.task('compile', compile);
 
-
-gulp.task('lint', function () {
+function lint() {
   return gulp.src('src/**/*.ts')
     .pipe(tslint({
       configuration: 'tools/tslint/tslint-node.json'
     }))
-    .pipe(tslint.report('full'));
-});
+    .pipe(tslint.report());
+}
+gulp.task('lint', lint);
 
-gulp.task('copy-to-lib', gulp.series(['compile']), function () {
+function copyToLib () {
   return gulp.src([
     'src/html/*.html',
     'tools/concat/js_prefix.html',
@@ -90,17 +87,19 @@ gulp.task('copy-to-lib', gulp.series(['compile']), function () {
   .pipe(concat('oracledb.html'))
   .pipe(addsrc.append(['transpiled/nodejs/*.js', '!transpiled/nodejs/*.spec.js']))
   .pipe(gulp.dest('lib'));
-});
+}
+gulp.task('copy-to-lib', gulp.series(['compile', copyToLib]));
 
-gulp.task('copy-to-node-red', gulp.series(['copy-to-lib']), function () {
+async function copyToNodeRed () {
   if (node_red_root) {
     return gulp.src(['lib/*.*'])
     .pipe(gulp.dest(node_red_root + '/node_modules/node-red-contrib-oracledb/lib'));
   }
-});
+}
+gulp.task('copy-to-node-red', gulp.series(['copy-to-lib', copyToNodeRed]));
 
 // unit tests, more a fast integration test because at the moment it uses an external AMQP server
-gulp.task('test', gulp.series(['copy-to-lib']), function () {
+async function test() {
   return gulp.src('transpiled/**/*.spec.js', {
     read: false
   })
@@ -109,10 +108,10 @@ gulp.task('test', gulp.series(['copy-to-lib']), function () {
       reporter: 'dot' // 'spec', 'dot'
     }))
     .on('error', swallowError);
-});
+}
+gulp.task('test', gulp.series(['copy-to-lib', test]));
 
-// integration tests, at the moment more an extended version of the unit tests
-gulp.task('test:integration', gulp.series(['copy-to-lib']), function () {
+function integrationTest() {
   return gulp.src('transpiled/**/*.spec-i.js', {
     read: false
   })
@@ -120,9 +119,11 @@ gulp.task('test:integration', gulp.series(['copy-to-lib']), function () {
       reporter: 'dot' // 'spec', 'dot'
     }))
     .on('error', swallowError);
-});
+}
+// integration tests, at the moment more an extended version of the unit tests
+gulp.task('test:integration', gulp.series(['copy-to-lib', integrationTest]));
 
-gulp.task('test:coverage', gulp.series(['copy-to-lib']), function () {
+function testCoverage() {
   return gulp.src('transpiled/**/*.spec.js', {
     read: false
   })
@@ -130,13 +131,12 @@ gulp.task('test:coverage', gulp.series(['copy-to-lib']), function () {
       reporter: 'spec', // 'spec', 'dot'
       istanbul: true
     }));
-});
+}
+gulp.task('test:coverage', gulp.series(['copy-to-lib', testCoverage]));
 
 gulp.task('build:clean', gulp.series(['clean', 'compile', 'test']));
 gulp.task('default', gulp.series(['build:clean']));
-
 gulp.task('build', gulp.series(['compile', 'copy-to-lib', 'test', 'copy-to-node-red']));
-
 gulp.task('watch', gulp.series(['clean', 'build']), function () {
   gulp.watch('server/**/*.ts', ['build']);
 });
