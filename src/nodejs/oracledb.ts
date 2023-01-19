@@ -204,7 +204,7 @@ module.exports = function (RED) {
               requestingNode.error("Oracle query error: " + err.message);
               var errorCode = err.message.slice(0, 9);
               node.status.emit("error", err);
-              if (errorCode === "ORA-03113" || errorCode === "ORA-03114" || errorCode === "ORA-03135") {
+              if (err.message.match(/(1080|3113|3114|2396|1012)/g)) {
                 // start reconnection process
                 node.connection = null;
                 if (node.reconnect) {
