@@ -33,8 +33,7 @@ module.exports = function (RED) {
         node.server.emit("close");
         done();
       });
-    }
-    else {
+    } else {
       node.status({ fill: "red", shape: "dot", text: "error" });
       node.error("Oracle " + node.oracleType + " error: missing Oracle server configuration", {});
     }
@@ -51,8 +50,7 @@ module.exports = function (RED) {
     node.useMappings = n.usemappings;
     try {
       node.mappings = n.mappings ? JSON.parse(n.mappings) : [];
-    }
-    catch (err) {
+    } catch (err) {
       node.error("Error parsing mappings: " + err.message, {});
       node.mappings = [];
     }
@@ -72,21 +70,18 @@ module.exports = function (RED) {
         for (var i = 0, len = node.mappings.length; i < len; i++) {
           try {
             value = resolvePath(msg.payload, node.mappings[i]);
-          }
-          catch (err) {
+          } catch (err) {
             value = null;
           }
           values.push(value);
         }
-      }
-      else {
+      } else {
         values = msg.payload;
       }
       var query;
       if (node.useQuery || !msg.query) {
         query = node.query;
-      }
-      else {
+      } else {
         query = msg.query;
       }
       var resultAction = msg.resultAction || node.resultAction;
@@ -125,24 +120,22 @@ module.exports = function (RED) {
     });
 
     node.claimConnection = function (requestingNode, msg) {
-      node.debug("Connection claim started");
+      node.log("Connection claim started");
       if (!node.connection && !node.connectionInProgress) {
         node.connectionInProgress = true;
         if (node.firstConnection) {
           node.status.emit("connecting");
           node.log("Connection in progress");
-        }
-        else {
+        } else {
           node.status.emit("reconnecting");
           node.log("Reconnection in progress");
         }
         node.firstConnection = false;
         // Create the connection for the Oracle server
-        if (node.db.indexOf('@') === 0) {
+        if (node.db.indexOf("@") === 0) {
           // DB is already an connection string
           node.connectString = node.db.substring(1);
-        }
-        else {
+        } else {
           node.connectString = node.host + ":" + node.port + (node.db ? "/" + node.db : "");
         }
         oracledb.getConnection({
@@ -153,20 +146,17 @@ module.exports = function (RED) {
           node.connectionInProgress = false;
           if (err) {
             node.status.emit("error", err);
-            let errorCode = err.message.slice(0, 9);
             requestingNode.error("Oracle-server error connection to " + node.connectString + ": " + err.message, msg);
-            if (errorCode === "ORA-01017") {
+            if (err.message.match(/1017/g)) {
               requestingNode.error("WRONG Credentials " + node.connectString + ": " + err.message, msg);
-            }
-            else {
+            } else {
               // start reconnection process (retry connection claim)
               if (node.reconnect) {
                 requestingNode.log("Retry connection to Oracle server in " + node.reconnectTimeout + " ms");
                 node.reconnecting = setTimeout(node.claimConnection, node.reconnectTimeout, requestingNode, msg);
               }
             }
-          }
-          else {
+          } else {
             node.connection = connection;
             node.status.emit("connected");
             requestingNode.log("Connected to Oracle server " + node.connectString);
@@ -185,7 +175,7 @@ module.exports = function (RED) {
           if (err) {
             return cb(`${err} config=${JSON.stringify(config)}`);
           }
-          console.log('Pool created for ' + config.connectString);
+          console.log("Pool created for " + config.connectString);
           node.pool = pl;
           cb(null, node.pool);
         });
@@ -197,14 +187,13 @@ module.exports = function (RED) {
 
     /* Option to */
     node.claimPoolConnection = function (requestingNode, msg) {
-      node.trace("Connection claim started");
+      node.log("Connection claim started");
       if (!node.connection && !node.connectionInProgress) {
         node.connectionInProgress = true;
         if (node.firstConnection) {
           node.status.emit("connecting");
           node.log("Connection started");
-        }
-        else {
+        } else {
           node.status.emit("reconnecting");
           node.log("Reconnection started");
         }
@@ -219,12 +208,10 @@ module.exports = function (RED) {
         node.getPool(config, (err, pool) => {
           if (err) {
             node.status.emit("error", err);
-            let errorCode = err.message.slice(0, 9);
             requestingNode.error("Oracle-server error connection to " + node.connectString + ": " + err.message, msg);
-            if (errorCode === "ORA-01017") {
+            if (err.message.match(/1017/g)) {
               node.error("WRONG Credentials " + node.connectString + ": " + err.message, msg);
-            }
-            else {
+            } else {
               // start reconnection process (retry connection claim)
               if (node.reconnect) {
                 node.log("Retry connection to Oracle server in " + node.reconnectTimeout + " ms");
@@ -236,20 +223,17 @@ module.exports = function (RED) {
               node.connectionInProgress = false;
               if (err) {
                 node.status.emit("error", err);
-                let errorCode = err.message.slice(0, 9);
                 node.error("Oracle-server error connection to " + node.connectString + ": " + err.message, msg);
-                if (errorCode === "ORA-01017") {
+                if (err.message.match(/1017/g)) {
                   node.error("WRONG Credentials " + node.connectString + ": " + err.message, msg);
-                }
-                else {
+                } else {
                   // start reconnection process (retry connection claim)
                   if (node.reconnect) {
                     node.log("Retry connection to Oracle server in " + node.reconnectTimeout + " ms");
                     node.reconnecting = setTimeout(node.claimPoolConnection, node.reconnectTimeout, requestingNode, msg);
                   }
                 }
-              }
-              else {
+              } else {
                 node.connection = connection;
                 node.status.emit("connected");
                 node.log("Connected to Oracle server " + node.connectString);
@@ -280,8 +264,7 @@ module.exports = function (RED) {
           node.log("Oracle server connection " + node.connectString + " closed");
           cb();
         });
-      }
-      else {
+      } else {
         cb();
       }
     };
@@ -305,22 +288,26 @@ module.exports = function (RED) {
         node.connection.execute(query, values, options, function (err, result) {
           if (err) {
             // requestingNode.error("Oracle query error: " + err.message);
-            var errorCode = err.message.slice(0, 9);
             //node.status.emit("error", err);
-            if (errorCode === "ORA-03113" || errorCode === "ORA-03114" || errorCode === "ORA-02396" || errorCode === "ORA-01012") {
+            if (err.message.match(/(1080|3113|3114|2396|1012)/g)) {
               //if session timeout or not logged on ,reclaim connection
               // start reconnection process
               node.connection = null;
               if (node.reconnect) {
                 node.log("Oracle server connection lost, retry in " + node.reconnectTimeout + " ms");
-                node.reconnecting = setTimeout(node.query, node.reconnectTimeout, requestingNode, query, values, resultAction, resultSetLimit, msg);
+                node.reconnecting = setTimeout(node.query,
+                  node.reconnectTimeout,
+                  requestingNode,
+                  query,
+                  values,
+                  resultAction,
+                  resultSetLimit,
+                  msg);
               }
-            }
-            else {
+            } else {
               requestingNode.error("Oracle query error: " + err.message, msg);
             }
-          }
-          else {
+          } else {
             switch (resultAction) {
               case "single":
                 msg.payload = result.rows;
@@ -342,8 +329,7 @@ module.exports = function (RED) {
             }
           }
         });
-      }
-      else {
+      } else {
         requestingNode.log("Oracle query execution queued");
         node.queryQueue.push({
           requestingNode: requestingNode,
@@ -361,15 +347,13 @@ module.exports = function (RED) {
       resultSet.getRows(maxRows, function (err, rows) {
         if (err) {
           requestingNode.error("Oracle resultSet error: " + err.message, msg);
-        }
-        else if (rows.length === 0) {
+        } else if (rows.length === 0) {
           resultSet.close(function () {
             if (err) {
               requestingNode.error("Oracle error closing resultSet: " + err.message, msg);
             }
           });
-        }
-        else {
+        } else {
           msg.payload = rows;
           requestingNode.send(msg);
           requestingNode.log("Oracle query resultSet rows sent");
