@@ -13,6 +13,7 @@ It uses the [oracledb](https://www.npmjs.com/package/oracledb) library for the O
 - [Known issues](#knownissues)
 - [What's new](#whatsnew)
 - [Roadmap](#roadmap)
+- [Developing](#developing)
 
 
 ## Installation     <a name="installation"></a>
@@ -78,3 +79,12 @@ The roadmap section describes things that I want to add or change in the (hopefu
 ### Realized
 - Make it an input and output node:
   - Add support to return SELECT query results
+
+## Developing     <a name="developing"></a>
+This project is now using Typescript source and Gulp to transpile from src to lib.  The lib folder is still version controlled, but SHOULD NOT be used as source!
+
+### Build
+`gulp build`
+
+### Publish
+`npm publish`
