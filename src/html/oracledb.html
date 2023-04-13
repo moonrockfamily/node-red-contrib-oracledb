@@ -63,9 +63,29 @@
   <p>Expects an object called
   <b>msg</b> containing <b>msg.payload</b> and optionally <b>msg.query</b> and <b>msg.mappings</b>.</p>
   <p>
-  <b>msg.payload</b>: array containing the fields to be used inside the query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
+  <b>msg.payload</b>: object containing the named parameters referenced in the query, the :cursor must be type 2021 (CURSOR) and dir 3003 (BIND_OUT) AND the resultSet will be fetched from this out bound result! eg. {
+    "qty": {
+        "type": 2010,
+        "dir": 3001,
+        "val": 2
+    },
+    "asOf": {
+        "type": 2014,
+        "dir": 3001,
+        "val": "2023-01-09"
+    },
+    "impliedType": {
+        "type": 2001,
+        "dir": 3001,
+        "val": "CREDIT"
+    },
+    "cursor": {
+        "type": 2021,
+        "dir": 3003
+    }
+}<br>
   <b>msg.query</b>: string containing the SQL query, if this is not available, the default SQL query will be used.<br>
-  <b>msg.fieldMappings</b>: array containing the object to array field mappings. Will be used if the content of <i>msg.payload</i> is not an array. If this is not available, the default field mappings will be used.<br>
+  <b>msg.fieldMappings</b>: array containing the object to array field mappings, when useMappings is selected this array is used to resolve the payload values as per the object-resolve-path package<br>
   <b>msg.resultAction</b>: string containing "single", "single-meta", "multi" or "none", if "single" a single result message containing the resulting rows will be sent, if "single-meta" a single result message containing the resulting rows and metadata will be sent, if "multi" the results can be spread over multiple messages, if "none" no messages will be sent.
   If this is not available the default defined in <i>Query results</i> will be used.<br>
   <b>msg.resultSetSize</b>: number, maximum number of rows in a result message. If this is not available the default defined in <i>Query results</i> will be used.
