@@ -358,6 +358,9 @@ module.exports = function (RED) {
         if (err) {
           requestingNode.error("Oracle resultSet error: " + err.message, msg);
         } else if (rows.length === 0) {
+          msg.payload = [];
+          requestingNode.send(msg);
+          requestingNode.log("Oracle query sent empty array to complete resultSet");
           resultSet.close(function () {
             if (err) {
               requestingNode.error("Oracle error closing resultSet: " + err.message, msg);
